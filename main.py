@@ -1,9 +1,11 @@
-# streamlit_app.py
+# main.py
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 from goose3 import Goose
 import pdfplumber
+from streamlit_lottie import st_lottie  # Import the streamlit-lottie library
+
 
 def scrape_website(url: str) -> str:
     """Scrapes a website and returns the title and text of the page."""
@@ -44,8 +46,25 @@ def extract_text_from_pdf(file) -> str:
     except Exception as e:
         return f"Sorry, I couldn't extract text from this PDF. Error: {e}"
 
+def load_lottie_url(url: str):
+    """Loads a Lottie animation from a URL."""
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Failed to load Lottie animation from {url}")
+        return None
+    
+# Load and display the Lottie animation
+lottie_url = "https://lottie.host/20b8c958-ba15-48ff-8623-24441a725eb0/mCJ86ypilt.json"
+lottie_animation = load_lottie_url(lottie_url)
+
 # Streamlit UI
 st.title("EchoSift - Web Scraper and PDF Extractor")
+
+if lottie_animation:
+    st_lottie(lottie_animation,speed=1,reverse=False,loop=True,quality="high",height=300,width=300,key="scraper_animation",)
 
 # Web Scraping Section
 st.header("Web Scraping")
