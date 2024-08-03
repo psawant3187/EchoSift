@@ -61,7 +61,7 @@ lottie_url = "https://lottie.host/20b8c958-ba15-48ff-8623-24441a725eb0/mCJ86ypil
 lottie_animation = load_lottie_url(lottie_url)
 
 if lottie_animation:
-    st_lottie(lottie_animation,speed=1,reverse=False,loop=True,quality="high",height=100,width=100,key="scraper_animation",)
+    st_lottie(lottie_animation,speed=1,reverse=False,loop=True,quality="high",height=150,width=150,key="scraper_animation",)
     
 # Streamlit UI
 st.title("EchoSift - Web Scraper and PDF Extractor")
