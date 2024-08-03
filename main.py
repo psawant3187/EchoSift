@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from goose3 import Goose
 import pdfplumber
-from streamlit_lottie import st_lottie  # Import the streamlit-lottie library
+from streamlit_lottie import st_lottie  
 
 
 def scrape_website(url: str) -> str:
