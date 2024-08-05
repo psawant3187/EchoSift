@@ -57,11 +57,11 @@ def load_lottie_url(url: str):
         return None
     
 # Load and display the Lottie animation
-lottie_url = "https://lottie.host/a49858c3-355b-4982-b05d-3c47f593900b/POOmKAfmRg.json"
+lottie_url = "https://lottie.host/3308134f-b1a7-4f79-bce5-996a61da9108/SpP1i7Qmxq.json"
 lottie_animation = load_lottie_url(lottie_url)
 
 if lottie_animation:
-    st_lottie(lottie_animation,speed=1,reverse=False,loop=True,quality="high",height=200,width=200,key="scraper_animation",)
+    st_lottie(lottie_animation,speed=1,reverse=False,loop=True,quality="high",height=100,width=100,key="scraper_animation",)
     
 # Streamlit UI
 st.title("EchoSift - Web Scraper and PDF Extractor")
