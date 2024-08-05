@@ -57,7 +57,7 @@ def load_lottie_url(url: str):
         return None
     
 # Load and display the Lottie animation
-lottie_url = "https://lottie.host/49a684f8-8d9c-4e8f-8253-f5a418ac0a12/HnRKl0TqjM.json"
+lottie_url = "https://lottie.host/4c726157-f1a4-4db5-b6ff-17e4cc9875b3/d26gcrJpUt.json"
 lottie_animation = load_lottie_url(lottie_url)
 
 if lottie_animation:
