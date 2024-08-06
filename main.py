@@ -64,7 +64,7 @@ if lottie_animation:
     st_lottie(lottie_animation,speed=1,reverse=False,loop=True,quality="high",height=100,width=100,key="scraper_animation",)
     
 # Streamlit UI
-st.title("EchoSift - Web Scraper and PDF Extractor")
+st.title("EchoSift - Data Extraction and PDF Extractor")
 
 # Web Scraping Section
 st.header("Web Scraping")
