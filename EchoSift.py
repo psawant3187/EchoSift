@@ -67,6 +67,8 @@ def summarize_text(text: str, sentence_count: int = 5) -> str:
     summary = summarizer(parser.document, sentence_count)
     return " ".join(str(sentence) for sentence in summary)
 
+st.set_page_config(page_title="EchoSift", page_icon="🔍", layout="wide")
+
 # Sidebar option menu
 with st.sidebar:
     page = option_menu(
