@@ -153,7 +153,7 @@ elif page == "Contact Us":
         We'd love to hear from you! Whether you have a question about features, 
         pricing, need a demo, or anything else, our team is ready to assist.
     """)
-    st.write("Email: support@echosift.com")
+    st.write("Email: echosift.aaps@gmail.com")
     st.write("Phone: +123-456-7890")
 
 # Telegram Bot Page
