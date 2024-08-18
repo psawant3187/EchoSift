@@ -154,7 +154,7 @@ elif page == "Contact Us":
         pricing, need a demo, or anything else, our team is ready to assist.
     """)
     st.write("Email: echosift.aaps@gmail.com")
-    st.write("Phone: +123-456-7890")
+    st.write("Phone: +91 9769495768")
 
 # Telegram Bot Page
 elif page == "Telegram Bot":
