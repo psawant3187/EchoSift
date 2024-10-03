@@ -58,16 +58,19 @@ def scrape_website(url: str) -> str:
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        soup = BeautifulSoup(response.content, "html.parser")
+
+        # Use Goose3 for extracting article content
         g = Goose()
         article = g.extract(url=url)
 
         title = article.title or "No Title Found"
         body = article.cleaned_text.strip() or "No content found."
 
+        # Fallback to BeautifulSoup if Goose fails to extract body
         if not body:
+            soup = BeautifulSoup(response.content, "html.parser")
             paragraphs = soup.find_all("p")
-            body = "\n\n".join(p.text for p in paragraphs if p.text)
+            body = "\n\n".join(p.get_text() for p in paragraphs if p.get_text())
 
         return f"Title: {title}\n\nContent:\n{body or 'No text found on the page.'}"
 
@@ -217,7 +220,14 @@ elif page == "PDF Extraction":
 
 # Amazon Scraper Page
 elif page == "Amazon Scraper":
-    st.title("Amazon Product Scraper")
+    col1, col2 = st.columns([1, 7])
+    lottie_url = "https://lottie.host/33d5d406-f666-4359-8702-3847dcef4b58/JkXh2nRM6v.json"
+    lottie_animation = load_lottie_url(lottie_url)
+    if lottie_animation:
+        with col1:
+            st_lottie(lottie_animation, speed=1, height=100, key="home_lottie")
+    with col2:
+        st.title("Amazon Scraper")
     
     st.subheader("Instructions")
     st.write(""" 
