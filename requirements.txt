@@ -7,3 +7,4 @@ streamlit_lottie==0.0.5
 streamlit_option_menu==0.3.13
 nltk==3.8.1
 summa==1.2.0
+goose3==1.0.0
