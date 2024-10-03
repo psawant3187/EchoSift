@@ -27,7 +27,11 @@ st.markdown(
 )
 
 # Initialize the summarization pipeline
-summarizer = pipeline("summarization")
+summarizer = summarizer = pipeline(
+    "summarization",
+    model="facebook/bart-large-cnn",
+    revision="main"  # You can pin a specific revision if needed
+)
 
 # Helper function: Load Lottie animation
 def load_lottie_url(url: str):
