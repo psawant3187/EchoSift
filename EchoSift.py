@@ -9,6 +9,10 @@ from sumy.summarizers.lsa import LsaSummarizer
 from streamlit_lottie import st_lottie
 from streamlit_option_menu import option_menu
 import nltk
+import random
+import io
+import pandas as pd
+from requests.exceptions import RequestException
 
 # Download required NLTK data files
 nltk.download('punkt')
@@ -29,10 +33,33 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Helper functions for data extraction
-def scrape_website(url: str) -> str:
+# Helper function: Load Lottie animation
+def load_lottie_url(url: str):
     try:
         response = requests.get(url)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Failed to load Lottie animation from {url}: {e}")
+        return None
+
+# Helper: Random User-Agent
+def get_random_user_agent():
+    return random.choice(USER_AGENTS)
+
+# List of user-agents to rotate
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:90.0) Gecko/20100101 Firefox/90.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36",
+]
+
+# Helper: Scrape Website Content (now using User-Agent rotation)
+def scrape_website(url: str) -> str:
+    headers = {"User-Agent": get_random_user_agent()}
+    try:
+        response = requests.get(url, headers=headers)  # Use random User-Agent in headers
         response.raise_for_status()
         soup = BeautifulSoup(response.content, "html.parser")
         g = Goose()
@@ -55,38 +82,69 @@ def scrape_website(url: str) -> str:
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
+# Helper function: Extract text from PDF
 def extract_text_from_pdf(file) -> str:
     try:
         with pdfplumber.open(file) as pdf:
-            text = ""
-            for page in pdf.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
+            text = "".join(page.extract_text() for page in pdf.pages if page.extract_text())
             return text.strip() if text.strip() else "No text found in the PDF."
     except Exception as e:
         return f"Sorry, I couldn't extract text from this PDF. Error: {e}"
 
-def load_lottie_url(url: str):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        st.error(f"Failed to load Lottie animation from {url}")
-        return None
-
-def summarize_text(text: str, sentence_count: int = 5) -> str:
+# Helper function: Summarize text
+def summarize_text(text: str, sentence_count: int = 6) -> str:
     parser = PlaintextParser.from_string(text, Tokenizer("english"))
     summarizer = LsaSummarizer()
     summary = summarizer(parser.document, sentence_count)
     return " ".join(str(sentence) for sentence in summary)
 
-# Sidebar option menu with separate pages
+# Helper function: Save to CSV
+def save_to_csv(products):
+    csv_buffer = io.StringIO()
+    pd.DataFrame(products).to_csv(csv_buffer, index=False)
+    return csv_buffer.getvalue()
+
+# Helper function: Generate Amazon search query
+def generate_search_query(category, product_name, brand):
+    search_query = f"{category} {product_name} {brand}".strip()
+    return search_query.replace(' ', '+')
+
+# Helper function: Scrape Amazon products
+def scrape_amazon(search_query):
+    search_url = f"https://www.amazon.in/s?k={search_query}"
+    headers = {"User-Agent": get_random_user_agent()}
+    
+    try:
+        response = requests.get(search_url, headers=headers)
+        response.raise_for_status()
+    except RequestException as e:
+        return [], f"Network error occurred: {e}"
+    
+    soup = BeautifulSoup(response.content, "html.parser")
+    products = []
+    
+    for item in soup.find_all('div', {'class': 's-result-item'}):
+        try:
+            product_name = item.h2.get_text(strip=True) if item.h2 else 'No name available'
+            price = item.find('span', {'class': 'a-price-whole'}).get_text(strip=True) if item.find('span', {'class': 'a-price-whole'}) else 'Price not available'
+            ratings = item.find('span', {'class': 'a-icon-alt'}).get_text(strip=True) if item.find('span', {'class': 'a-icon-alt'}) else 'No ratings available'
+            availability = item.find('span', {'class': 'a-size-small'}).get_text(strip=True) if item.find('span', {'class': 'a-size-small'}) else 'Not available'
+            description = item.find('span', {'class': 'a-size-base-plus'}).get_text(strip=True) if item.find('span', {'class': 'a-size-base-plus'}) else 'No description'
+            
+            products.append({
+                'Product Name': product_name, 'Price': price, 'Ratings': ratings,
+                'Availability': availability, 'Description': description ,'Category' : category
+            })
+        except AttributeError:
+            continue
+    
+    return products, None
+
+# Sidebar option menu
 with st.sidebar:
     page = option_menu(
-        "Main Menu", ["Web Scraping", "PDF Extraction", "Telegram Bot"],
-        icons=["cloud", "file-earmark-pdf", "chat-dots"],
+        "Main Menu", ["Web Scraping", "PDF Extraction", "Amazon Scraper", "Telegram Bot"],
+        icons=["cloud", "file-earmark-pdf", "amazon", "chat-dots"],
         menu_icon="cast", default_index=0,
     )
 
@@ -99,25 +157,19 @@ if page == "Web Scraping":
         with col1:
             st_lottie(lottie_animation, speed=1, height=100, key="home_lottie")
     with col2:
-        st.title("Data Extraction from WEB")
-    # Instructions
+        st.title("Data Extraction from Web")
+
     st.subheader("Web Scraping Functionality")
     st.write("""
     **Access:** Through the "Web Scraping" option in the sidebar menu.
 
     **Steps:**
-    1. On the "Web Scraping" page, enter the URL of the website you wish to scrape in the text input field.
-    2. Click the "Scrape" button to start the web scraping process.
-    3. The content extracted from the webpage will be displayed in the "Scraped Content" text area.
-    4. If desired, click the "Summarize Scraped Content" button to summarize the extracted content. The summary will be displayed in a new text area.
-
-    **Function:**
-    - Uses requests and BeautifulSoup to scrape website content.
-    - Goose3 library is used for extracting article titles and text, with a fallback to manual scraping of paragraphs if necessary.
+    1. Enter the URL of the website you wish to scrape.
+    2. Click "Scrape" to extract content from the webpage.
+    3. The content will be displayed in the text area.
+    4. Optionally, click "Summarize Scraped Content" to summarize the text.
     """)
 
-    # Web Scraping Section
-    st.header("Web Scraping")
     url = st.text_input("Enter a URL to scrape")
     if st.button("Scrape"):
         if url:
@@ -127,7 +179,6 @@ if page == "Web Scraping":
         else:
             st.error("Please enter a valid URL")
 
-    # Summarization Section for Scraped Content
     if 'scraped_content' in st.session_state and st.button("Summarize Scraped Content"):
         summary = summarize_text(st.session_state['scraped_content'])
         st.text_area("Summary of Scraped Content", summary, height=150)
@@ -143,24 +194,17 @@ elif page == "PDF Extraction":
     with col2:
         st.title("Data Extraction from PDF")
 
-    # Instructions
     st.subheader("PDF Text Extraction Functionality")
     st.write("""
     **Access:** Through the "PDF Extraction" option in the sidebar menu.
 
     **Steps:**
-    1. On the "PDF Text Extraction" page, upload a PDF file using the "Upload a PDF file" option.
-    2. Click the "Extract Text from PDF" button to extract the text from the PDF.
-    3. The extracted text will be displayed in the "Extracted PDF Text" text area.
-    4. If desired, click the "Summarize Extracted PDF Text" button to summarize the extracted content.
-
-    **Function:**
-    - Uses pdfplumber to extract text from each page of the uploaded PDF.
-    - Provides a summary using the sumy library with LSA summarization (Latent Semantic Analysis).
+    1. Upload a PDF file.
+    2. Click "Extract Text from PDF" to extract the content.
+    3. The text will be displayed in the text area.
+    4. Optionally, click "Summarize Extracted PDF Text" to summarize the extracted content.
     """)
 
-    # PDF Extraction Section
-    st.header("PDF Text Extraction")
     uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
     if st.button("Extract Text from PDF"):
         if uploaded_file:
@@ -170,10 +214,42 @@ elif page == "PDF Extraction":
         else:
             st.error("Please upload a PDF file")
 
-    # Summarization Section for Extracted PDF Text
     if 'pdf_text' in st.session_state and st.button("Summarize Extracted PDF Text"):
         summary = summarize_text(st.session_state['pdf_text'])
         st.text_area("Summary of Extracted PDF Text", summary, height=150)
+
+# Amazon Scraper Page
+elif page == "Amazon Scraper":
+    st.title("Amazon Product Scraper")
+    
+    st.subheader("Instructions")
+    st.write("""
+    **Steps to use Amazon Scraper:**
+    1. Enter the category of the product you want to search.
+    2. Optionally, provide a product name or brand for more specific results.
+    3. Click "Scrape Amazon" to retrieve product details.
+    4. The results will display in a table, and you can download them as a CSV file.
+    """)
+    
+    category = st.text_input("Enter the category (required)", "")
+    product_name = st.text_input("Enter the product name (optional)", "")
+    brand = st.text_input("Enter the brand (optional)", "")
+    
+    if st.button("Scrape Amazon"):
+        if category:
+            search_query = generate_search_query(category, product_name, brand)
+            products, error = scrape_amazon(search_query)
+            
+            if error:
+                st.error(error)
+            elif products:
+                csv_data = save_to_csv(products)
+                st.dataframe(pd.DataFrame(products))
+                st.download_button("Download as CSV", data=csv_data, file_name="amazon_products.csv", mime="text/csv")
+            else:
+                st.error("No products found. Try a different search query.")
+        else:
+            st.error("Please enter a product category.")
 
 # Telegram Bot Page
 elif page == "Telegram Bot":
@@ -186,23 +262,10 @@ elif page == "Telegram Bot":
     with col2:
         st.title("Telegram Bot")
 
-    # Instructions
     st.subheader("Telegram Bot Integration")
     st.write("""
-    **Access:** Through the "Telegram Bot" option in the sidebar menu.
-
     **Steps:**
-    1. On the "Telegram Bot" page, follow the link to the EchoSift Telegram bot.
-    2. The bot allows you to send URLs or PDF files directly via Telegram.
-    3. It will return extracted or summarized content based on the input.
-
-    **Function:**
-    - Provides a Telegram interface where users can interact with the bot to perform the same data extraction tasks.
-    - The bot link is provided on the page for easy access.
-    """)
-
-    st.write("""
-        Our Telegram bot provides the same data extraction capabilities directly within Telegram. 
-        Send URLs or PDF files to the bot, and it will extract the text for you.
+    1. Use the EchoSift Telegram bot to interact with data extraction.
+    2. Send URLs or PDFs to the bot and receive extracted or summarized content.
     """)
     st.write("Link: [EchoSift Telegram Bot](https://t.me/EchoSift)")
