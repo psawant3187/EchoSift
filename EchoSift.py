@@ -1,17 +1,22 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
+from goose3 import Goose
 import pdfplumber
-from transformers import pipeline
+from summa import summarizer
 from streamlit_lottie import st_lottie
 from streamlit_option_menu import option_menu
+import nltk
 import random
 import io
 import pandas as pd
 from requests.exceptions import RequestException
 
+# Download required NLTK data files
+nltk.download('punkt')
+
 # Custom CSS for background image
-background_image_url = "https://i.ibb.co/L0mQ3Fs/Background-Image.jpg"  # Replace with your image URL
+background_image_url = "https://i.ibb.co/L0mQ3Fs/Background-Image.jpg"
 st.markdown(
     f"""
     <style>
@@ -26,86 +31,79 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Initialize the summarization pipeline
-summarizer = summarizer = pipeline(
-    "summarization",
-    model="facebook/bart-large-cnn",
-    revision="main"  # You can pin a specific revision if needed
-)
-
-# Helper function: Load Lottie animation
+# Load Lottie animation
 def load_lottie_url(url: str):
     try:
         response = requests.get(url)
         response.raise_for_status()
         return response.json()
-    except requests.exceptions.RequestException as e:
-        st.error(f"Failed to load Lottie animation from {url}: {e}")
+    except RequestException as e:
+        st.error(f"Failed to load Lottie animation: {e}")
         return None
 
-# Helper: Random User-Agent
+# Random User-Agent for scraping
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
     "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:90.0) Gecko/20100101 Firefox/90.0",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36",
 ]
+
 def get_random_user_agent():
     return random.choice(USER_AGENTS)
 
-# Helper: Scrape Website Content
+# Scrape Website Content
 def scrape_website(url: str) -> str:
     headers = {"User-Agent": get_random_user_agent()}
     try:
-        response = requests.get(url, headers=headers)  # Use random User-Agent in headers
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, "html.parser")
+        g = Goose()
+        article = g.extract(url=url)
 
-        title = soup.title.string if soup.title else "No Title Found"
-        body = "\n\n".join(p.text for p in soup.find_all("p") if p.text)
+        title = article.title or "No Title Found"
+        body = article.cleaned_text.strip() or "No content found."
 
         if not body:
-            body = "No text found on the page."
+            paragraphs = soup.find_all("p")
+            body = "\n\n".join(p.text for p in paragraphs if p.text)
 
-        return f"Title: {title}\n\nContent:\n{body}"
+        return f"Title: {title}\n\nContent:\n{body or 'No text found on the page.'}"
 
-    except requests.exceptions.RequestException as req_err:
+    except RequestException as req_err:
         return f"Network error: {req_err}"
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
-# Helper function: Extract text from PDF
+# Extract text from PDF
 def extract_text_from_pdf(file) -> str:
     try:
         with pdfplumber.open(file) as pdf:
             text = "".join(page.extract_text() for page in pdf.pages if page.extract_text())
-            return text.strip() if text.strip() else "No text found in the PDF."
+            return text.strip() or "No text found in the PDF."
     except Exception as e:
-        return f"Sorry, I couldn't extract text from this PDF. Error: {e}"
+        return f"Error extracting PDF text: {e}"
 
-# Helper function: Summarize text using Hugging Face Transformers
-def summarize_text(text: str, max_length: int = 150, min_length: int = 50, do_sample: bool = False) -> str:
+# Summarize text using Summa TextRank
+def summarize_text(text: str) -> str:
     if not text.strip():
         return "No text to summarize."
-    
-    try:
-        summary = summarizer(text, max_length=max_length, min_length=min_length, do_sample=do_sample)
-        return summary[0]['summary_text']
-    except Exception as e:
-        return f"An error occurred during summarization: {str(e)}"
+    summary = summarizer.summarize(text)
+    return summary if summary else "Summary could not be generated."
 
-# Helper function: Save to CSV
+# Save products to CSV
 def save_to_csv(products):
     csv_buffer = io.StringIO()
     pd.DataFrame(products).to_csv(csv_buffer, index=False)
     return csv_buffer.getvalue()
 
-# Helper function: Generate Amazon search query
+# Generate Amazon search query
 def generate_search_query(category, product_name, brand):
     search_query = f"{category} {product_name} {brand}".strip()
     return search_query.replace(' ', '+')
 
-# Helper function: Scrape Amazon products
+# Scrape Amazon products
 def scrape_amazon(search_query):
     search_url = f"https://www.amazon.in/s?k={search_query}"
     headers = {"User-Agent": get_random_user_agent()}
@@ -128,8 +126,11 @@ def scrape_amazon(search_query):
             description = item.find('span', {'class': 'a-size-base-plus'}).get_text(strip=True) if item.find('span', {'class': 'a-size-base-plus'}) else 'No description'
             
             products.append({
-                'Product Name': product_name, 'Price': price, 'Ratings': ratings,
-                'Availability': availability, 'Description': description
+                'Product Name': product_name,
+                'Price': price,
+                'Ratings': ratings,
+                'Availability': availability,
+                'Description': description
             })
         except AttributeError:
             continue
@@ -173,7 +174,7 @@ if page == "Web Scraping":
             st.session_state['scraped_content'] = scraped_content
             st.text_area("Scraped Content", scraped_content, height=300)
         else:
-            st.error("Please enter a valid URL")
+            st.error("Please enter a valid URL.")
 
     if 'scraped_content' in st.session_state and st.button("Summarize Scraped Content"):
         summary = summarize_text(st.session_state['scraped_content'])
@@ -191,7 +192,7 @@ elif page == "PDF Extraction":
         st.title("Data Extraction from PDF")
 
     st.subheader("PDF Text Extraction Functionality")
-    st.write("""
+    st.write(""" 
     **Access:** Through the "PDF Extraction" option in the sidebar menu.
 
     **Steps:**
@@ -208,7 +209,7 @@ elif page == "PDF Extraction":
             st.session_state['pdf_text'] = pdf_text
             st.text_area("Extracted PDF Text", pdf_text, height=300)
         else:
-            st.error("Please upload a PDF file")
+            st.error("Please upload a PDF file.")
 
     if 'pdf_text' in st.session_state and st.button("Summarize Extracted PDF Text"):
         summary = summarize_text(st.session_state['pdf_text'])
@@ -219,14 +220,14 @@ elif page == "Amazon Scraper":
     st.title("Amazon Product Scraper")
     
     st.subheader("Instructions")
-    st.write("""
+    st.write(""" 
     **Steps to use Amazon Scraper:**
     1. Enter the category of the product you want to search.
     2. Optionally, provide a product name or brand for more specific results.
     3. Click "Scrape Amazon" to retrieve product details.
     4. The results will display in a table, and you can download them as a CSV file.
     """)
-    
+
     category = st.text_input("Enter the category (required)", "")
     product_name = st.text_input("Enter the product name (optional)", "")
     brand = st.text_input("Enter the brand (optional)", "")
@@ -259,7 +260,7 @@ elif page == "Telegram Bot":
         st.title("Telegram Bot")
 
     st.subheader("Telegram Bot Integration")
-    st.write("""
+    st.write(""" 
     **Steps:**
     1. Use the EchoSift Telegram bot to interact with data extraction.
     2. Send URLs or PDFs to the bot and receive extracted or summarized content.
