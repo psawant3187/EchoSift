@@ -13,6 +13,7 @@ import random
 import io
 import pandas as pd
 from requests.exceptions import RequestException
+from collections.abc import Sequence  # Fixed import for Python 3.10+
 
 # Download required NLTK data files
 nltk.download('punkt')
@@ -55,27 +56,24 @@ USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36",
 ]
 
-# Helper: Scrape Website Content (now using User-Agent rotation)
+# Helper: Scrape Website Content
 def scrape_website(url: str) -> str:
     headers = {"User-Agent": get_random_user_agent()}
     try:
-        response = requests.get(url, headers=headers)  # Use random User-Agent in headers
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, "html.parser")
         g = Goose()
         article = g.extract(url=url)
 
         title = article.title or "No Title Found"
-        body = article.cleaned_text
+        body = article.cleaned_text or ""
 
         if not body:
             paragraphs = soup.find_all("p")
             body = "\n\n".join(p.text for p in paragraphs if p.text)
 
-        if not body:
-            body = "No text found on the page."
-
-        return f"Title: {title}\n\nContent:\n{body}"
+        return f"Title: {title}\n\nContent:\n{body or 'No text found on the page.'}"
 
     except requests.exceptions.RequestException as req_err:
         return f"Network error: {req_err}"
@@ -87,12 +85,15 @@ def extract_text_from_pdf(file) -> str:
     try:
         with pdfplumber.open(file) as pdf:
             text = "".join(page.extract_text() for page in pdf.pages if page.extract_text())
-            return text.strip() if text.strip() else "No text found in the PDF."
+            return text.strip() or "No text found in the PDF."
     except Exception as e:
         return f"Sorry, I couldn't extract text from this PDF. Error: {e}"
 
 # Helper function: Summarize text
 def summarize_text(text: str, sentence_count: int = 6) -> str:
+    if not text.strip():
+        return "No text to summarize."
+    
     parser = PlaintextParser.from_string(text, Tokenizer("english"))
     summarizer = LsaSummarizer()
     summary = summarizer(parser.document, sentence_count)
@@ -133,7 +134,7 @@ def scrape_amazon(search_query):
             
             products.append({
                 'Product Name': product_name, 'Price': price, 'Ratings': ratings,
-                'Availability': availability, 'Description': description ,'Category' : category
+                'Availability': availability, 'Description': description, 'Category': category
             })
         except AttributeError:
             continue
@@ -160,7 +161,7 @@ if page == "Web Scraping":
         st.title("Data Extraction from Web")
 
     st.subheader("Web Scraping Functionality")
-    st.write("""
+    st.write("""\
     **Access:** Through the "Web Scraping" option in the sidebar menu.
 
     **Steps:**
@@ -195,7 +196,7 @@ elif page == "PDF Extraction":
         st.title("Data Extraction from PDF")
 
     st.subheader("PDF Text Extraction Functionality")
-    st.write("""
+    st.write("""\
     **Access:** Through the "PDF Extraction" option in the sidebar menu.
 
     **Steps:**
@@ -223,14 +224,14 @@ elif page == "Amazon Scraper":
     st.title("Amazon Product Scraper")
     
     st.subheader("Instructions")
-    st.write("""
+    st.write("""\
     **Steps to use Amazon Scraper:**
     1. Enter the category of the product you want to search.
     2. Optionally, provide a product name or brand for more specific results.
     3. Click "Scrape Amazon" to retrieve product details.
     4. The results will display in a table, and you can download them as a CSV file.
     """)
-    
+
     category = st.text_input("Enter the category (required)", "")
     product_name = st.text_input("Enter the product name (optional)", "")
     brand = st.text_input("Enter the brand (optional)", "")
@@ -263,7 +264,7 @@ elif page == "Telegram Bot":
         st.title("Telegram Bot")
 
     st.subheader("Telegram Bot Integration")
-    st.write("""
+    st.write("""\
     **Steps:**
     1. Use the EchoSift Telegram bot to interact with data extraction.
     2. Send URLs or PDFs to the bot and receive extracted or summarized content.
