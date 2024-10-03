@@ -1,10 +1,10 @@
-streamlit==1.25.0   
+streamlit==1.25.0
 requests==2.31.0
 beautifulsoup4==4.12.2
 goose3==3.1.13
 pdfplumber==0.9.0
-sumy==0.8.1
-nltk==3.9.1
 pandas==2.1.1
+nltk==3.9.1
 streamlit-lottie==0.0.2
 streamlit-option-menu==0.3.2
+git+https://github.com/miso-belica/sumy.git  # Using latest from GitHub for Python 3.10+ compatibility
