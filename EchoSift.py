@@ -133,7 +133,8 @@ def scrape_amazon(search_query):
                 'Price': price,
                 'Ratings': ratings,
                 'Availability': availability,
-                'Description': description
+                'Description': description,
+                'Category' : category
             })
         except AttributeError:
             continue
