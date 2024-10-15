@@ -16,7 +16,7 @@ from requests.exceptions import RequestException
 nltk.download('punkt')
 
 # Custom CSS for background image
-background_image_url = "https://i.ibb.co/L0mQ3Fs/Background-Image.jpg"
+background_image_url = "https://img.freepik.com/free-vector/dark-gradient-background-with-copy-space_53876-99548.jpg"
 st.markdown(
     f"""
     <style>
