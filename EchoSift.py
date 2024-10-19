@@ -152,7 +152,7 @@ with st.sidebar:
 # Web Scraping Page
 if page == "Web Scraping":
     col1, col2 = st.columns([1, 7])
-    lottie_url = "https://lottie.host/1e5320ad-373e-480c-9a0c-77920a0b3c33/53l6Bpp6wl.json"
+    lottie_url = "https://lottie.host/99a68a00-6e33-43fb-9ee6-cccc4c19131d/YcyAardQqk.json"
     lottie_animation = load_lottie_url(lottie_url)
     if lottie_animation:
         with col1:
@@ -187,7 +187,7 @@ if page == "Web Scraping":
 # PDF Extraction Page
 elif page == "PDF Extraction":
     col1, col2 = st.columns([1, 7])
-    lottie_url = "https://lottie.host/1e5320ad-373e-480c-9a0c-77920a0b3c33/53l6Bpp6wl.json"
+    lottie_url = "https://lottie.host/99a68a00-6e33-43fb-9ee6-cccc4c19131d/YcyAardQqk.json"
     lottie_animation = load_lottie_url(lottie_url)
     if lottie_animation:
         with col1:
@@ -222,7 +222,7 @@ elif page == "PDF Extraction":
 # Amazon Scraper Page
 elif page == "Amazon Scraper":
     col1, col2 = st.columns([1, 7])
-    lottie_url = "https://lottie.host/1e5320ad-373e-480c-9a0c-77920a0b3c33/53l6Bpp6wl.json"
+    lottie_url = "https://lottie.host/99a68a00-6e33-43fb-9ee6-cccc4c19131d/YcyAardQqk.json"
     lottie_animation = load_lottie_url(lottie_url)
     if lottie_animation:
         with col1:
@@ -262,7 +262,7 @@ elif page == "Amazon Scraper":
 # Telegram Bot Page
 elif page == "Telegram Bot":
     col1, col2 = st.columns([1, 7])
-    lottie_url = "https://lottie.host/1e5320ad-373e-480c-9a0c-77920a0b3c33/53l6Bpp6wl.json"
+    lottie_url = "https://lottie.host/99a68a00-6e33-43fb-9ee6-cccc4c19131d/YcyAardQqk.json"
     lottie_animation = load_lottie_url(lottie_url)
     if lottie_animation:
         with col1:
