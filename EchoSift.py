@@ -16,20 +16,20 @@ from requests.exceptions import RequestException
 nltk.download('punkt')
 
 # Custom CSS for background image
-background_image_url = "https://media.istockphoto.com/id/1129050990/vector/abstract-diagonal-lines-striped-black-and-gray-gradient-background-and-texture-for-your.jpg?s=612x612&w=0&k=20&c=6p1HGXtIEWXHFUB6-2YJijS8FYHsn3N18X6kewEF4z4="
-st.markdown(
-    f"""
-    <style>
-    .stApp {{
-        background-image: url({background_image_url});
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-    }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# background_image_url = "https://media.istockphoto.com/id/1129050990/vector/abstract-diagonal-lines-striped-black-and-gray-gradient-background-and-texture-for-your.jpg?s=612x612&w=0&k=20&c=6p1HGXtIEWXHFUB6-2YJijS8FYHsn3N18X6kewEF4z4="
+# st.markdown(
+#     f"""
+#     <style>
+#     .stApp {{
+#         background-image: url({background_image_url});
+#         background-size: cover;
+#         background-position: center;
+#         background-repeat: no-repeat;
+#     }}
+#     </style>
+#     """,
+#     unsafe_allow_html=True
+# )
 
 # Load Lottie animation
 def load_lottie_url(url: str):
