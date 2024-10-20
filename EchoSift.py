@@ -112,6 +112,7 @@ def get_random_user_agent():
     return random.choice(USER_AGENTS)
 
 # Scrape Amazon products with internal error handling
+# Scrape Amazon products
 def scrape_amazon(search_query):
     search_url = f"https://www.amazon.in/s?k={search_query}"
     headers = {"User-Agent": get_random_user_agent()}
@@ -234,7 +235,7 @@ elif page == "PDF Extraction":
         summary = summarize_text(st.session_state['pdf_text'])
         st.text_area("Summary of Extracted PDF Text", summary, height=150)
 
-# Amazon Scraper Page
+# Amazon Scraper
 elif page == "Amazon Scraper":
     col1, col2 = st.columns([1, 7])
     lottie_url = "https://lottie.host/99a68a00-6e33-43fb-9ee6-cccc4c19131d/YcyAardQqk.json"
@@ -262,11 +263,18 @@ elif page == "Amazon Scraper":
         if category:
             search_query = generate_search_query(category, product_name, brand)
             with st.spinner("Fetching Amazon products..."):
-                products, error = scrape_amazon(search_query)
+                products = []
+                error_message = None
                 
-                if error:
-                    print(error)
-                elif products and isinstance(products, list) and len(products) > 0:
+                # Attempt to scrape until successful
+                for attempt in range(3):  # Retry up to 3 times
+                    products, error_message = scrape_amazon(search_query)
+                    if not error_message and products:
+                        break  # Exit loop if successful
+                    
+                if error_message:
+                    st.error(f"Error: {error_message}. Please try again later.")
+                elif products:
                     csv_data = save_to_csv(products)
                     st.dataframe(pd.DataFrame(products))
                     st.download_button("Download as CSV", data=csv_data, file_name="amazon_products.csv", mime="text/csv")
