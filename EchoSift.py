@@ -276,4 +276,4 @@ elif page == "Telegram Bot":
     1. Use the EchoSift Telegram bot to interact with data extraction.
     2. Send URLs or PDFs to the bot and receive extracted or summarized content.
     """)
-    st.write("Link: [EchoSift Telegram Bot](https://t.me/EchoSift)")
+    st.write("Link: [EchoSift Telegram Bot](https://t.me/EchoSiftBot)")
