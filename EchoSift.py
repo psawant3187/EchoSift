@@ -112,44 +112,38 @@ def get_random_user_agent():
     return random.choice(USER_AGENTS)
 
 # Scrape Amazon products with internal error handling
-def scrape_amazon(search_query, category):
+def scrape_amazon(search_query):
     search_url = f"https://www.amazon.in/s?k={search_query}"
     headers = {"User-Agent": get_random_user_agent()}
-
+    
     try:
         response = requests.get(search_url, headers=headers)
-        response.raise_for_status()  # Will raise an exception for any status codes like 503
-
-        # Parse the HTML content
-        soup = BeautifulSoup(response.content, "html.parser")
-        products = []
-
-        # Extract product information
-        for item in soup.find_all('div', {'class': 's-result-item'}):
-            try:
-                product_name = item.h2.get_text(strip=True) if item.h2 else 'No name available'
-                price = item.find('span', {'class': 'a-price-whole'}).get_text(strip=True) if item.find('span', {'class': 'a-price-whole'}) else 'Price not available'
-                ratings = item.find('span', {'class': 'a-icon-alt'}).get_text(strip=True) if item.find('span', {'class': 'a-icon-alt'}) else 'No ratings available'
-                availability = item.find('span', {'class': 'a-size-small'}).get_text(strip=True) if item.find('span', {'class': 'a-size-small'}) else 'Not available'
-                description = item.find('span', {'class': 'a-size-base-plus'}).get_text(strip=True) if item.find('span', {'class': 'a-size-base-plus'}) else 'No description'
-
-                products.append({
-                    'Product Name': product_name,
-                    'Price': price,
-                    'Ratings': ratings,
-                    'Availability': availability,
-                    'Description': description,
-                    'Category': category
-                })
-            except AttributeError:
-                # If any element is missing, continue with the next item
-                continue
-
-        return products
-
-    except Exception as e:
-        # Handle any errors silently and return an empty list
-        return []
+        response.raise_for_status()
+    except RequestException as e:
+        return [], f"Network error occurred: {e}"
+    
+    soup = BeautifulSoup(response.content, "html.parser")
+    products = []
+    
+    for item in soup.find_all('div', {'class': 's-result-item'}):
+        try:
+            product_name = item.h2.get_text(strip=True) if item.h2 else 'No name available'
+            price = item.find('span', {'class': 'a-price-whole'}).get_text(strip=True) if item.find('span', {'class': 'a-price-whole'}) else 'Price not available'
+            ratings = item.find('span', {'class': 'a-icon-alt'}).get_text(strip=True) if item.find('span', {'class': 'a-icon-alt'}) else 'No ratings available'
+            availability = item.find('span', {'class': 'a-size-small'}).get_text(strip=True) if item.find('span', {'class': 'a-size-small'}) else 'Not available'
+            description = item.find('span', {'class': 'a-size-base-plus'}).get_text(strip=True) if item.find('span', {'class': 'a-size-base-plus'}) else 'No description'
+            
+            products.append({
+                'Product Name': product_name,
+                'Price': price,
+                'Ratings': ratings,
+                'Availability': availability,
+                'Description': description,
+            })
+        except AttributeError:
+            continue
+    
+    return products, None
 
 # Save products to CSV
 def save_to_csv(products):
@@ -242,23 +236,15 @@ elif page == "PDF Extraction":
 
 # Amazon Scraper Page
 elif page == "Amazon Scraper":
-    # Setting up two columns for animation and title
     col1, col2 = st.columns([1, 7])
-
-    # Load Lottie animation
     lottie_url = "https://lottie.host/99a68a00-6e33-43fb-9ee6-cccc4c19131d/YcyAardQqk.json"
     lottie_animation = load_lottie_url(lottie_url)
-
-    # Display Lottie animation in first column
     if lottie_animation:
         with col1:
             st_lottie(lottie_animation, speed=1, height=100, key="home_lottie")
-
-    # Display title in second column
     with col2:
         st.title("Amazon Scraper")
-
-    # Instructions for the user
+    
     st.subheader("Instructions")
     st.write(""" 
     **Steps to use Amazon Scraper:**
@@ -268,35 +254,24 @@ elif page == "Amazon Scraper":
     4. The results will display in a table, and you can download them as a CSV file.
     """)
 
-    # User input fields
     category = st.text_input("Enter the category (required)", "")
     product_name = st.text_input("Enter the product name (optional)", "")
     brand = st.text_input("Enter the brand (optional)", "")
-
-    # Button to trigger Amazon scraping
+    
     if st.button("Scrape Amazon"):
-        # Check if required category field is filled
         if category:
-            # Generate search query from inputs
             search_query = generate_search_query(category, product_name, brand)
-
-            # Display loading spinner while fetching data
             with st.spinner("Fetching Amazon products..."):
                 products, error = scrape_amazon(search_query)
-
-            # Handle error if one occurred
-            if error:
-                st.error(error)
-
-            # If products are found, display them in a table and offer CSV download
-            elif products:
-                csv_data = save_to_csv(products)
-                st.dataframe(pd.DataFrame(products))
-                st.download_button("Download as CSV", data=csv_data, file_name="amazon_products.csv", mime="text/csv")
-
-            # Handle case where no products were found
-            else:
-                st.error("No products found. Try a different search query.")
+                
+                if error:
+                    st.error(error)
+                elif products and isinstance(products, list) and len(products) > 0:
+                    csv_data = save_to_csv(products)
+                    st.dataframe(pd.DataFrame(products))
+                    st.download_button("Download as CSV", data=csv_data, file_name="amazon_products.csv", mime="text/csv")
+                else:
+                    st.error("No products found. Try a different search query.")
         else:
             st.error("Please enter a product category.")
 
