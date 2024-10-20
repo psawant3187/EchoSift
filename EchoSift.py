@@ -93,15 +93,17 @@ def generate_search_query(category, product_name, brand):
     return search_query.replace(' ', '+')
 
 # Scrape Amazon products
+# Scrape Amazon products with spinner
 def scrape_amazon(search_query):
     search_url = f"https://www.amazon.in/s?k={search_query}"
     headers = {"User-Agent": get_random_user_agent()}
     
-    try:
-        response = requests.get(search_url, headers=headers)
-        response.raise_for_status()
-    except RequestException as e:
-        return [], f"Network error occurred: {e}"
+    with st.spinner("Fetching Amazon products..."):
+        try:
+            response = requests.get(search_url, headers=headers)
+            response.raise_for_status()
+        except RequestException:
+            return [], "Unable to fetch data at the moment. Please try again later."  # Generic error message
     
     soup = BeautifulSoup(response.content, "html.parser")
     products = []
@@ -126,6 +128,7 @@ def scrape_amazon(search_query):
             continue
     
     return products, None
+
 
 
 # Sidebar option menu
@@ -233,6 +236,8 @@ elif page == "Amazon Scraper":
     if st.button("Scrape Amazon"):
         if category:
             search_query = generate_search_query(category, product_name, brand)
+            
+            # Show spinner and scrape Amazon
             products, error = scrape_amazon(search_query)
             
             if error:
