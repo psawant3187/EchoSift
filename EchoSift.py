@@ -265,7 +265,7 @@ elif page == "Amazon Scraper":
                 products, error = scrape_amazon(search_query)
                 
                 if error:
-                    st.error(error)
+                    print(error)
                 elif products and isinstance(products, list) and len(products) > 0:
                     csv_data = save_to_csv(products)
                     st.dataframe(pd.DataFrame(products))
