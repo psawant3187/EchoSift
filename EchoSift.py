@@ -15,21 +15,9 @@ from requests.exceptions import RequestException
 # Download required NLTK data files
 nltk.download('punkt')
 
-# Custom CSS for background image
-# background_image_url = "https://media.istockphoto.com/id/1129050990/vector/abstract-diagonal-lines-striped-black-and-gray-gradient-background-and-texture-for-your.jpg?s=612x612&w=0&k=20&c=6p1HGXtIEWXHFUB6-2YJijS8FYHsn3N18X6kewEF4z4="
-# st.markdown(
-#     f"""
-#     <style>
-#     .stApp {{
-#         background-image: url({background_image_url});
-#         background-size: cover;
-#         background-position: center;
-#         background-repeat: no-repeat;
-#     }}
-#     </style>
-#     """,
-#     unsafe_allow_html=True
-# )
+# Error logging function
+def log_error(message):
+    print(f"An error occurred: {message}")
 
 # Load Lottie animation
 def load_lottie_url(url: str):
@@ -38,7 +26,7 @@ def load_lottie_url(url: str):
         response.raise_for_status()
         return response.json()
     except RequestException as e:
-        st.error(f"Failed to load Lottie animation: {e}")
+        log_error(f"Failed to load Lottie animation: {e}")
         return None
 
 # Random User-Agent for scraping
@@ -59,14 +47,11 @@ def scrape_website(url: str) -> str:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
 
-        # Use Goose3 for extracting article content
         g = Goose()
         article = g.extract(url=url)
-
         title = article.title or "No Title Found"
         body = article.cleaned_text.strip() or "No content found."
 
-        # Fallback to BeautifulSoup if Goose fails to extract body
         if not body:
             soup = BeautifulSoup(response.content, "html.parser")
             paragraphs = soup.find_all("p")
@@ -74,10 +59,8 @@ def scrape_website(url: str) -> str:
 
         return f"Title: {title}\n\nContent:\n{body or 'No text found on the page.'}"
 
-    except RequestException as req_err:
-        return f"Network error: {req_err}"
     except Exception as e:
-        return f"An error occurred: {str(e)}"
+        return f"An error occurred while scraping: {str(e)}"
 
 # Extract text from PDF
 def extract_text_from_pdf(file) -> str:
@@ -90,10 +73,13 @@ def extract_text_from_pdf(file) -> str:
 
 # Summarize text using Summa TextRank
 def summarize_text(text: str) -> str:
-    if not text.strip():
-        return "No text to summarize."
-    summary = summarizer.summarize(text)
-    return summary if summary else "Summary could not be generated."
+    try:
+        if not text.strip():
+            return "No text to summarize."
+        summary = summarizer.summarize(text)
+        return summary if summary else "Summary could not be generated."
+    except Exception as e:
+        return f"Error summarizing text: {e}"
 
 # Save products to CSV
 def save_to_csv(products):
@@ -140,6 +126,7 @@ def scrape_amazon(search_query):
             continue
     
     return products, None
+
 
 # Sidebar option menu
 with st.sidebar:
