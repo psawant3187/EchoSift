@@ -42,25 +42,34 @@ def get_random_user_agent():
 
 # Scrape Website Content
 def scrape_website(url: str) -> str:
-    headers = {"User-Agent": get_random_user_agent()}
+    """Scrapes a website and returns the title and text of the page as a single message."""
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url)
         response.raise_for_status()
-
+        soup = BeautifulSoup(response.content, "html.parser")
         g = Goose()
         article = g.extract(url=url)
+
         title = article.title or "No Title Found"
-        body = article.cleaned_text.strip() or "No content found."
+        body = article.cleaned_text
+        if not body:
+            paragraphs = soup.find_all("p")
+            body = "\n\n".join(p.text for p in paragraphs if p.text)
 
         if not body:
-            soup = BeautifulSoup(response.content, "html.parser")
-            paragraphs = soup.find_all("p")
-            body = "\n\n".join(p.get_text() for p in paragraphs if p.get_text())
+            body = "No text found on the page."
 
-        return f"Title: {title}\n\nContent:\n{body or 'No text found on the page.'}"
+        # Combine title and body
+        full_message = f"Title: {title}\n\nContent:\n{body}"
 
+        return full_message
+
+    except requests.exceptions.RequestException as req_err:
+        logger.error(f"Network error: {req_err}")
+        return f"Network error: {req_err}"
     except Exception as e:
-        return f"An error occurred while scraping: {str(e)}"
+        logger.error(f"An error occurred: {str(e)}")
+        return f"An error occurred: {str(e)}"
 
 # Extract text from PDF
 def extract_text_from_pdf(file) -> str:
