@@ -100,7 +100,6 @@ def scrape_website(url):
     except requests.exceptions.RequestException as e:
         return {"error": f"Error retrieving webpage: {e}"}
 
-
 # Extract text from PDF
 def extract_text_from_pdf(file) -> str:
     try:
