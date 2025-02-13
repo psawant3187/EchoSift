@@ -243,10 +243,8 @@ with st.sidebar:
 # Web Scraping Page
 if page == "Web Scraping":
     col1, col2 = st.columns([1, 7])
-
-    lottie_url = (
-        "https://lottie.host/99a68a00-6e33-43fb-9ee6-cccc4c19131d/YcyAardQqk.json"
-    )
+    
+    lottie_url = "https://lottie.host/99a68a00-6e33-43fb-9ee6-cccc4c19131d/YcyAardQqk.json"
     lottie_animation = load_lottie_url(lottie_url)
 
     if lottie_animation:
@@ -256,8 +254,7 @@ if page == "Web Scraping":
             st.title("Data Extraction from Web")
 
     st.subheader("Web Scraping Functionality")
-st.write(
-    """
+st.write("""
 **Access:** Through the "Web Scraping" option in the sidebar menu.
 
 **Steps:**
@@ -265,8 +262,7 @@ st.write(
 2. Click "Scrape" to extract content from the webpage.
 3. The content, metadata, and response headers will be displayed.
 4. Optionally, click "Summarize Scraped Content" to generate a summary.
-"""
-)
+""")
 
 url = st.text_input("Enter a URL to scrape")
 
@@ -276,6 +272,7 @@ if st.button("Scrape Website"):
         if "error" in data:
             st.error(data["error"])
         else:
+            st.session_state["scraped_content"] = data["content"]
             st.subheader("Title")
             st.write(data["title"])
 
@@ -294,18 +291,16 @@ if st.button("Scrape Website"):
                     st.image(img_url, caption=img_url, use_container_width=True)
             else:
                 st.write("No images found.")
-
-            # Store content in session state
-            st.session_state["scraped_content"] = data["content"]
-
     else:
         st.error("Please enter a valid URL.")
 
-# Ensure Summarize Button appears on the same page
-if "scraped_content" in st.session_state and st.session_state["scraped_content"]:
-    if st.button("Summarize Scraped Content"):
-        summary = summarize_text(st.session_state["scraped_content"])
-        st.text_area("Summary of Scraped Content", summary, height=150)
+    if "scraped_content" in st.session_state and st.session_state["scraped_content"]:
+        if st.button("Summarize Scraped Content"):
+            summary = summarize_text(st.session_state["scraped_content"])
+            st.text_area("Summary of Scraped Content", summary, height=150)
+
+
+
 
 # PDF Extraction Page
 elif page == "PDF Extraction":
