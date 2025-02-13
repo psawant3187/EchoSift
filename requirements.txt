@@ -9,6 +9,5 @@ selenium==4.28.1
 streamlit==1.41.1
 streamlit_lottie==0.0.5
 streamlit_option_menu==0.4.0
-undetected_chromedriver==3.5.5
 validators==0.34.0
 webdriver_manager==4.0.2
