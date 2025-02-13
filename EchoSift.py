@@ -12,7 +12,10 @@ import pandas as pd
 from requests.exceptions import RequestException
 from urllib.parse import urljoin
 from datetime import datetime
-import undetected_chromedriver as uc
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 
 # Load model directly
@@ -189,16 +192,16 @@ def scrape_amazon(search_query):
     }
 
     return products, metadata
+
 # Flipkart Scraper Using Selenium
 def scrape_flipkart(search_query):
-    options = uc.ChromeOptions()
-    options.headless = True
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-
-    driver = uc.Chrome(options=options)
+    def init_driver():
+        options = webdriver.ChromeOptions()
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    driver = init_driver()
     driver.get(f"https://www.flipkart.com/search?q={search_query}")
     time.sleep(2)
 
@@ -206,19 +209,15 @@ def scrape_flipkart(search_query):
     driver.quit()
 
     products = []
-    for item in soup.select('div._1AtVbE'):
+    for item in soup.find_all('div', {'class': '_1AtVbE'}):
         try:
-            product_name = item.select_one('a.IRpwTa, a.s1Q9rs')
+            product_name = item.find('a', {'class': 'IRpwTa'}) or item.find('a', {'class': 's1Q9rs'})
             product_name = product_name.get_text(strip=True) if product_name else 'No name available'
-            price = item.select_one('div._30jeq3._1_WHN1')
-            price = price.get_text(strip=True) if price else 'Price not available'
-            ratings = item.select_one('div._3LWZlK')
-            ratings = ratings.get_text(strip=True) if ratings else 'No ratings available'
-            availability = item.select_one('div._2JC05C')
-            availability = availability.get_text(strip=True) if availability else 'Available'
-            description = item.select_one('ul._1xgFaf')
+            price = item.find('div', {'class': '_30jeq3 _1_WHN1'}).get_text(strip=True) if item.find('div', {'class': '_30jeq3 _1_WHN1'}) else 'Price not available'
+            ratings = item.find('div', {'class': '_3LWZlK'}).get_text(strip=True) if item.find('div', {'class': '_3LWZlK'}) else 'No ratings available'
+            availability = item.find('div', {'class': '_2JC05C'}).get_text(strip=True) if item.find('div', {'class': '_2JC05C'}) else 'Available'
+            description = item.find('ul', {'class': '_1xgFaf'})
             description = "\n".join(li.get_text(strip=True) for li in description.find_all('li')) if description else 'No description available'
-
             products.append({
                 'Product Name': product_name,
                 'Price': price,
@@ -230,6 +229,7 @@ def scrape_flipkart(search_query):
             continue
 
     return products, None
+
 # Save products to CSV
 def save_to_csv(products):
     csv_buffer = io.StringIO()
