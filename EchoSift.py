@@ -11,9 +11,9 @@ import io
 import pandas as pd
 from requests.exceptions import RequestException
 from urllib.parse import urljoin
-import time
 from datetime import datetime
 import undetected_chromedriver as uc
+import time
 
 # Load model directly
 from openai import OpenAI
@@ -46,7 +46,6 @@ USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
     "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:90.0) Gecko/20100101 Firefox/90.0",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36",
 ]
 
 def get_random_user_agent():
@@ -54,50 +53,38 @@ def get_random_user_agent():
 
 # Scrape Website Content
 def scrape_website(url):
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
+    headers = {"User-Agent": get_random_user_agent()}
     result = {"title": "", "content": "", "metadata": "", "response_data": "", "images": []}
-
     try:
         response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()  # Raise an error for HTTP failures (4xx, 5xx)
-
+        response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
         g = Goose()
         article = g.extract(raw_html=response.text)
         result["title"] = article.title or "No Title Found"
         result["content"] = article.cleaned_text.strip() or "No content found."
 
-        # Extract metadata
         metadata = {
             "Title": result["title"],
             "Description": soup.find("meta", attrs={"name": "description"})["content"]
             if soup.find("meta", attrs={"name": "description"}) else "No Description Found",
-            "Keywords": soup.find("meta", attrs={"name": "keywords"})["content"]
-            if soup.find("meta", attrs={"name": "keywords"}) else "No Keywords Found"
         }
         result["metadata"] = metadata
 
-        # Extract response data
         result["response_data"] = {
             "Status Code": response.status_code,
             "Content-Type": response.headers.get("Content-Type", "N/A"),
-            "Server": response.headers.get("Server", "N/A"),
-            "Date": response.headers.get("Date", "N/A")
         }
 
-        # Extract images
         images = []
         for img in soup.find_all('img'):
             img_url = img.get('src')
             if img_url:
-                full_img_url = urljoin(url, img_url)
-                images.append(full_img_url)  # Store image URLs
+                images.append(urljoin(url, img_url))
         result["images"] = images
 
         return result
-    except requests.exceptions.RequestException as e:
+    except RequestException as e:
         return {"error": f"Error retrieving webpage: {e}"}
 
 # Extract text from PDF
@@ -109,23 +96,17 @@ def extract_text_from_pdf(file) -> str:
     except Exception as e:
         return f"Error extracting PDF text: {e}"
     
-# Summarization function using facebook/bart-large-cnn
+# Summarization function
 def summarize_text(text: str) -> str:
     try:
         if not text.strip():
             return "No text to summarize."
-
-        # Call OpenAI API for summarization
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": f"Summarize this: {text}"}]
         )
-
-        # Extract summary from response
         summary = response.choices[0].message.content
-
         return summary if summary else "Summary could not be generated."
-    
     except Exception as e:
         return f"Error summarizing text: {e}"
 
@@ -139,6 +120,7 @@ def save_to_csv(products):
 def generate_search_query(category, product_name, brand):
     search_query = f"{category} {product_name} {brand}".strip()
     return search_query.replace(' ', '+')
+
 
 # Random User-Agent for scraping
 USER_AGENTS = [
