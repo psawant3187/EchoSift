@@ -5,7 +5,6 @@ from goose3 import Goose
 import pdfplumber
 from streamlit_lottie import st_lottie
 from streamlit_option_menu import option_menu
-import nltk
 import random
 import io
 import pandas as pd
@@ -26,9 +25,6 @@ client = OpenAI(
     api_key=API_KEY,
     base_url=BASE_URL
 )
-
-# Download required NLTK data files
-nltk.download('punkt')
 
 # Error logging function
 def log_error(message):
