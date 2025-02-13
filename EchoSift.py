@@ -276,7 +276,6 @@ if st.button("Scrape Website"):
         if "error" in data:
             st.error(data["error"])
         else:
-            st.session_state["scraped_content"] = data["content"]
             st.subheader("Title")
             st.write(data["title"])
 
@@ -295,9 +294,14 @@ if st.button("Scrape Website"):
                     st.image(img_url, caption=img_url, use_container_width=True)
             else:
                 st.write("No images found.")
+
+            # Store content in session state
+            st.session_state["scraped_content"] = data["content"]
+
     else:
         st.error("Please enter a valid URL.")
 
+# Ensure Summarize Button appears on the same page
 if "scraped_content" in st.session_state and st.session_state["scraped_content"]:
     if st.button("Summarize Scraped Content"):
         summary = summarize_text(st.session_state["scraped_content"])
