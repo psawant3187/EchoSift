@@ -243,8 +243,10 @@ with st.sidebar:
 # Web Scraping Page
 if page == "Web Scraping":
     col1, col2 = st.columns([1, 7])
-    
-    lottie_url = "https://lottie.host/99a68a00-6e33-43fb-9ee6-cccc4c19131d/YcyAardQqk.json"
+
+    lottie_url = (
+        "https://lottie.host/99a68a00-6e33-43fb-9ee6-cccc4c19131d/YcyAardQqk.json"
+    )
     lottie_animation = load_lottie_url(lottie_url)
 
     if lottie_animation:
@@ -254,7 +256,8 @@ if page == "Web Scraping":
             st.title("Data Extraction from Web")
 
     st.subheader("Web Scraping Functionality")
-st.write("""
+st.write(
+    """
 **Access:** Through the "Web Scraping" option in the sidebar menu.
 
 **Steps:**
@@ -262,7 +265,8 @@ st.write("""
 2. Click "Scrape" to extract content from the webpage.
 3. The content, metadata, and response headers will be displayed.
 4. Optionally, click "Summarize Scraped Content" to generate a summary.
-""")
+"""
+)
 
 url = st.text_input("Enter a URL to scrape")
 
