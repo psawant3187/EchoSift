@@ -293,7 +293,7 @@ if page == "Web Scraping":
         else:
             st.error("Please enter a valid URL.")
 
-        if "scraped_content" in st.session_state and st.session_state["scraped_content"]:
+if "scraped_content" in st.session_state and st.session_state["scraped_content"]:
             if st.button("Summarize Scraped Content"):
                 summary = summarize_text(st.session_state["scraped_content"])
                 st.text_area("Summary of Scraped Content", summary, height=150)
