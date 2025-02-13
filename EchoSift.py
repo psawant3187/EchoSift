@@ -11,10 +11,6 @@ import io
 import pandas as pd
 from requests.exceptions import RequestException
 from urllib.parse import urljoin
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 import time
 from datetime import datetime
 import undetected_chromedriver as uc
@@ -68,17 +64,10 @@ def scrape_website(url):
         response.raise_for_status()  # Raise an error for HTTP failures (4xx, 5xx)
 
         soup = BeautifulSoup(response.text, 'html.parser')
-
-        # Extract title
-        result["title"] = soup.title.string.strip() if soup.title else "No Title Found"
-
-        # Extract text content
-        content = []
-        for paragraph in soup.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
-            text = paragraph.get_text(strip=True)
-            if text:
-                content.append(text)
-        result["content"] = "\n".join(content)
+        g = Goose()
+        article = g.extract(raw_html=response.text)
+        result["title"] = article.title or "No Title Found"
+        result["content"] = article.cleaned_text.strip() or "No content found."
 
         # Extract metadata
         metadata = {
