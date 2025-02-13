@@ -18,10 +18,10 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 
 # Load model directly
-from openai import OpenAI
+import openai
 API_KEY = "ddc-bUOZrLV5gJb4KLXJwnDmaFaS6pd7NcaewGsaaTLV9NWHC7Srmj"
 BASE_URL = "https://api.sree.shop/v1"
-client = OpenAI(
+client = openai.OpenAI(
     api_key=API_KEY,
     base_url=BASE_URL
 )
@@ -87,27 +87,40 @@ def scrape_website(url):
         return {"error": f"Error retrieving webpage: {e}"}
 
 # Extract text from PDF
-def extract_text_from_pdf(file) -> str:
+def extract_text_from_pdf(file):
+    """Extracts text and metadata from a PDF file."""
     try:
         with pdfplumber.open(file) as pdf:
-            text = "".join(page.extract_text() for page in pdf.pages if page.extract_text())
-            return text.strip() or "No text found in the PDF."
+            # Extract text from all pages
+            text = "".join(page.extract_text() for page in pdf.pages if page.extract_text()).strip()
+            
+            # Extract metadata from PDF
+            metadata = pdf.metadata or {}
+
+            # Return extracted text and metadata dictionary
+            return text if text else "No text found in the PDF.", metadata
+
     except Exception as e:
-        return f"Error extracting PDF text: {e}"
+        return f"Error extracting PDF text: {e}", {}
     
 # Summarization function
 def summarize_text(text: str) -> str:
+    MAX_TOKENS = 4000  # Adjust based on API limits
     try:
         if not text.strip():
             return "No text to summarize."
+        
+        truncated_text = text[:MAX_TOKENS]  # Limit input size
         response = client.chat.completions.create(
             model="gpt-4o",
-            messages=[{"role": "user", "content": f"Summarize this: {text}"}]
+            messages=[{"role": "user", "content": f"Summarize this: {truncated_text}"}]
         )
-        summary = response.choices[0].message.content
-        return summary if summary else "Summary could not be generated."
+
+        return response.choices[0].message.content or "Summary could not be generated."
+
     except Exception as e:
         return f"Error summarizing text: {e}"
+
 
 # Save products to CSV
 def save_to_csv(products):
@@ -294,10 +307,10 @@ if page == "Web Scraping":
         else:
             st.error("Please enter a valid URL.")
 
-    if "scraped_content" in st.session_state and st.session_state["scraped_content"]:
-        if st.button("Summarize Scraped Content"):
-            summary = summarize_text(st.session_state["scraped_content"])
-            st.text_area("Summary of Scraped Content", summary, height=150)
+        if "scraped_content" in st.session_state and st.session_state["scraped_content"]:
+            if st.button("Summarize Scraped Content"):
+                summary = summarize_text(st.session_state["scraped_content"])
+                st.text_area("Summary of Scraped Content", summary, height=150)
 
 
 # PDF Extraction Page
@@ -311,8 +324,9 @@ elif page == "PDF Extraction":
     with col2:
         st.title("Data Extraction from PDF")
 
+    # Instructions Section
     st.subheader("PDF Text Extraction Functionality")
-    st.write(""" 
+    st.write("""
     **Access:** Through the "PDF Extraction" option in the sidebar menu.
 
     **Steps:**
@@ -320,24 +334,36 @@ elif page == "PDF Extraction":
     2. Click "Extract Text from PDF" to extract the content.
     3. The text will be displayed in the text area.
     4. Optionally, click "Summarize Extracted PDF Text" to summarize the extracted content.
+    5. Alternatively, use the "Scrape Website Content" feature to extract web content.
     """)
 
+    # File Upload Section
     uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
-        
+
     if uploaded_file is not None:
+        # Extract text and metadata from the uploaded PDF
         extracted_text, metadata = extract_text_from_pdf(uploaded_file)
-            
+        
+        # Display Extracted Text
         st.subheader("Extracted Text")
-        st.text_area("", extracted_text, height=300)
-            
+        st.text_area("PDF Content", extracted_text, height=300)
+
+        # Display Metadata (if available)
         if metadata:
             st.subheader("Metadata")
             for key, value in metadata.items():
-                    st.write(f"**{key}:** {value}")
-            
+                st.write(f"**{key}:** {value}")
+
+        # Summarization Section
         if st.button("Summarize Extracted Text"):
-            summary = summarize_text(extracted_text)
-            st.text_area("Summary of Extracted Text", summary, height=150)
+            with st.spinner("Generating summary..."):
+                summary = summarize_text(extracted_text)
+        
+            # Display Summary
+            st.subheader("Summary of Extracted Text")
+            st.text_area("Summary", summary, height=150)
+        else:   
+            st.warning("No extracted text available for summarization.")
 
 # Amazon Scraper
 elif page == "Amazon Scraper":
