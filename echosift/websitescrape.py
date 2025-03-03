@@ -13,39 +13,56 @@ USER_AGENTS = [
 ]
 
 def get_random_user_agent():
-    return random.choice(USER_AGENTS)
+    try:
+        return random.choice(USER_AGENTS)
+    except Exception as e:
+        return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"  # Default user-agent
 
 def scrape_website(url):
     headers = {"User-Agent": get_random_user_agent()}
     result = {"title": "", "content": "", "metadata": "", "response_data": "", "images": []}
+    
     try:
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-        g = Goose()
-        article = g.extract(raw_html=response.text)
-        result["title"] = article.title or "No Title Found"
-        result["content"] = article.cleaned_text.strip() or "No content found."
-
-        metadata = {
-            "Title": result["title"],
-            "Description": soup.find("meta", attrs={"name": "description"})["content"]
-            if soup.find("meta", attrs={"name": "description"}) else "No Description Found",
-        }
-        result["metadata"] = metadata
-
+        
+        try:
+            g = Goose()
+            article = g.extract(raw_html=response.text)
+            result["title"] = article.title or "No Title Found"
+            result["content"] = article.cleaned_text.strip() or "No content found."
+        except Exception as e:
+            result["title"] = "Error extracting title"
+            result["content"] = "Error extracting content"
+        
+        try:
+            metadata = {
+                "Title": result["title"],
+                "Description": soup.find("meta", attrs={"name": "description"})["content"]
+                if soup.find("meta", attrs={"name": "description"}) else "No Description Found",
+            }
+            result["metadata"] = metadata
+        except Exception as e:
+            result["metadata"] = "Error extracting metadata"
+        
         result["response_data"] = {
             "Status Code": response.status_code,
             "Content-Type": response.headers.get("Content-Type", "N/A"),
         }
-
-        images = []
-        for img in soup.find_all('img'):
-            img_url = img.get('src')
-            if img_url:
-                images.append(urljoin(url, img_url))
-        result["images"] = images
-
+        
+        try:
+            images = []
+            for img in soup.find_all('img'):
+                img_url = img.get('src')
+                if img_url:
+                    images.append(urljoin(url, img_url))
+            result["images"] = images
+        except Exception as e:
+            result["images"] = []
+        
         return result
     except RequestException as e:
         return {"error": f"Error retrieving webpage: {e}"}
+    except Exception as e:
+        return {"error": f"Unexpected error: {e}"}
