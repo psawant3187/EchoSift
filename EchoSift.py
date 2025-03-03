@@ -40,7 +40,7 @@ if page == "Web Scraping":
 
     if lottie_animation:
         with col1:
-            st_lottie(lottie_animation, speed=1, height=100, key="home_lottie")
+            st_lottie(lottie_animation, speed=1, height=100, key="web_scraping_anim")
         with col2:
             st.title("Data Extraction from Web")
 
@@ -50,16 +50,17 @@ if page == "Web Scraping":
 
     **Steps:**
     1. Enter the URL of the website you wish to scrape.
-    2. Click "Scrape" to extract content from the webpage.
-    3. The content, metadata, and response headers will be displayed.
+    2. Click "Scrape Website" to extract content from the webpage.
+    3. View extracted content, metadata, and response headers.
     4. Optionally, click "Summarize Scraped Content" to generate a summary.
     """)
 
-    url = st.text_input("Enter a URL to scrape")
+    url = st.text_input("Enter a URL to scrape", placeholder="https://example.com")
 
     if st.button("Scrape Website"):
-        if url:
-            data = scrape_website(url)
+        if url.strip():
+            with st.spinner("Scraping website..."):
+                data = scrape_website(url)
             if "error" in data:
                 st.error(data["error"])
             else:
@@ -67,10 +68,10 @@ if page == "Web Scraping":
                 st.session_state["scraped_title"] = data["title"]
 
                 st.subheader("Title")
-                st.write(data["title"])
+                st.write(data["title"] if data["title"] else "No Title Found")
 
                 st.subheader("Content")
-                st.write(data["content"])
+                st.write(data["content"] if data["content"] else "No Content Found")
 
                 st.subheader("Metadata")
                 st.json(data["metadata"])
@@ -87,12 +88,11 @@ if page == "Web Scraping":
         else:
             st.error("Please enter a valid URL.")
 
-    if st.session_state["scraped_content"]:
+    if "scraped_content" in st.session_state and st.session_state["scraped_content"]:
         if st.button("Summarize Scraped Content"):
             with st.spinner("Generating Summary..."):
                 summary = summarize_text(st.session_state["scraped_content"])
                 st.text_area("Summary of Scraped Content", summary, height=150)
-
 
 # PDF Extraction Page
 elif page == "PDF Extraction":
