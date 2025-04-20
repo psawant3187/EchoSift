@@ -1,0 +1,14 @@
+beautifulsoup4==4.13.3
+goose3==3.1.19
+langdetect==1.0.9
+openai==1.70.0
+pandas==2.2.3
+pdfplumber==0.11.5
+Pillow==11.1.0
+PyPDF2==3.0.1
+Requests==2.32.3
+selenium==4.31.0
+streamlit==1.41.1
+streamlit_lottie==0.0.5
+streamlit_option_menu==0.4.0
+webdriver_manager==4.0.2

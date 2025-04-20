@@ -1,0 +1,49 @@
+C:\Users\Pranit Sawant\AppData\Roaming\Python\Python312\site-packages\torch\utils\_pytree.py:185: FutureWarning: optree is installed but the version is too old to support PyTorch Dynamo in C++ pytree. C++ pytree support is disabled. Please consider upgrading optree using `python3 -m pip install --upgrade 'optree>=0.13.0'`.
+  warnings.warn(
+Neither CUDA nor MPS are available - defaulting to CPU. Note: This module is much faster with a GPU.
+2025-03-22 22:55:54.063 Examining the path of torch.classes raised: Tried to instantiate class '__path__._path', but it does not exist! Ensure that it is registered via torch::class_
+While calling system event trigger handler
+Traceback (most recent call last):
+  File "C:\Users\Pranit Sawant\AppData\Roaming\Python\Python312\site-packages\twisted\internet\base.py", line 518, in _continueFiring
+    callable(*args, **kwargs)
+  File "C:\Users\Pranit Sawant\AppData\Roaming\Python\Python312\site-packages\twisted\internet\base.py", line 951, in _reallyStartRunning
+    self._signals.install()
+  File "C:\Users\Pranit Sawant\AppData\Roaming\Python\Python312\site-packages\twisted\internet\_signals.py", line 150, in install
+    signal.signal(signal.SIGTERM, self._sigTerm)
+  File "C:\Program Files\Python312\Lib\signal.py", line 56, in signal
+    handler = _signal.signal(_enum_to_int(signalnum), _enum_to_int(handler))
+builtins.ValueError: signal only works in main thread of the main interpreter
+
+2025-03-22 22:57:58 [twisted] CRITICAL: While calling system event trigger handler
+Traceback (most recent call last):
+  File "C:\Users\Pranit Sawant\AppData\Roaming\Python\Python312\site-packages\twisted\internet\base.py", line 518, in _continueFiring
+    callable(*args, **kwargs)
+  File "C:\Users\Pranit Sawant\AppData\Roaming\Python\Python312\site-packages\twisted\internet\base.py", line 951, in _reallyStartRunning
+    self._signals.install()
+  File "C:\Users\Pranit Sawant\AppData\Roaming\Python\Python312\site-packages\twisted\internet\_signals.py", line 150, in install
+    signal.signal(signal.SIGTERM, self._sigTerm)
+  File "C:\Program Files\Python312\Lib\signal.py", line 56, in signal
+    handler = _signal.signal(_enum_to_int(signalnum), _enum_to_int(handler))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: signal only works in main thread of the main interpreter
+While calling system event trigger handler
+Traceback (most recent call last):
+  File "C:\Users\Pranit Sawant\AppData\Roaming\Python\Python312\site-packages\twisted\internet\base.py", line 518, in _continueFiring
+    callable(*args, **kwargs)
+  File "C:\Users\Pranit Sawant\AppData\Roaming\Python\Python312\site-packages\scrapy\utils\ossignal.py", line 29, in install_shutdown_handlers
+    signal.signal(signal.SIGTERM, function)
+  File "C:\Program Files\Python312\Lib\signal.py", line 56, in signal
+    handler = _signal.signal(_enum_to_int(signalnum), _enum_to_int(handler))
+builtins.ValueError: signal only works in main thread of the main interpreter
+
+2025-03-22 22:57:58 [twisted] CRITICAL: While calling system event trigger handler
+Traceback (most recent call last):
+  File "C:\Users\Pranit Sawant\AppData\Roaming\Python\Python312\site-packages\twisted\internet\base.py", line 518, in _continueFiring
+    callable(*args, **kwargs)
+  File "C:\Users\Pranit Sawant\AppData\Roaming\Python\Python312\site-packages\scrapy\utils\ossignal.py", line 29, in install_shutdown_handlers
+    signal.signal(signal.SIGTERM, function)
+  File "C:\Program Files\Python312\Lib\signal.py", line 56, in signal
+    handler = _signal.signal(_enum_to_int(signalnum), _enum_to_int(handler))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: signal only works in main thread of the main interpreter
+2025-03-22 22:58:05.559 Examining the path of torch.classes raised: Tried to instantiate class '__path__._path', but it does not exist! Ensure that it is registered via torch::class_
