@@ -62,7 +62,7 @@ if page == "Web Scraping":
     """)
 
     # Reset Button
-    if st.button("🔄 Reset All"):
+    if st.button("🔄 Reset"):
         st.session_state.pop('pdf_text', None)
         st.session_state.pop('pdf_summary', None)
         st.session_state.pop('pdf_qa_history', None)
@@ -327,7 +327,7 @@ elif page == "Amazon Scraper":
         st.rerun()
 
     if st.session_state.products:
-        products = st.session_state.products
+        full_products = st.session_state.products
         metadata = st.session_state.metadata
 
         st.subheader("📊 Sort Products")
@@ -356,16 +356,21 @@ elif page == "Amazon Scraper":
 
         # Sorting logic
         if sort_option == "Price: Low to High":
-            products.sort(key=extract_price)
+            full_products.sort(key=extract_price)
         elif sort_option == "Price: High to Low":
-            products.sort(key=extract_price, reverse=True)
+            full_products.sort(key=extract_price, reverse=True)
         elif sort_option == "Name: A to Z":
-            products.sort(key=extract_name)
+            full_products.sort(key=extract_name)
         elif sort_option == "Ratings: High to Low":
-            products.sort(key=extract_rating, reverse=True)
+            full_products.sort(key=extract_rating, reverse=True)
 
-        st.subheader("📦 Scraped Product Details")
-        for product in products:
+        # Show only top 5 toggle
+        st.subheader("📦 Product Display Options")
+        show_top_5 = st.checkbox("Show only top 5 products", value=True)
+        display_products = full_products[:5] if show_top_5 else full_products
+
+        st.subheader(f"📦 Showing {'Top 5' if show_top_5 else 'All'} Scraped Products")
+        for product in display_products:
             with st.container():
                 col1, col2 = st.columns([1, 4])
                 with col1:
@@ -380,14 +385,14 @@ elif page == "Amazon Scraper":
             st.markdown("---")
 
         st.subheader("🔍 Compare Products Side-by-Side")
-        product_options = {f"{p['Product Name']} (₹{p['Price']})": idx for idx, p in enumerate(products)}
+        product_options = {f"{p['Product Name']} (₹{p['Price']})": idx for idx, p in enumerate(full_products)}
 
         selected_indices = st.multiselect(
             "Select products to compare",
             options=list(product_options.keys()),
             max_selections=4,
         )
-        selected_products = [products[product_options[key]] for key in selected_indices]
+        selected_products = [full_products[product_options[key]] for key in selected_indices]
 
         if selected_products:
             cols = st.columns(len(selected_products))
@@ -403,7 +408,7 @@ elif page == "Amazon Scraper":
         with st.expander("🧾 View Search Metadata"):
             st.json(metadata)
 
-        df = pd.DataFrame(products)
+        df = pd.DataFrame(full_products)
         st.subheader("📄 Scraped Data Table")
         st.dataframe(df)
 
