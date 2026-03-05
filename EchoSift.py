@@ -1,4 +1,5 @@
 import streamlit as st
+import html
 from streamlit_lottie import st_lottie
 from streamlit_option_menu import option_menu
 import pandas as pd
@@ -220,11 +221,14 @@ elif page == "PDF Extraction":
 
         with col1:
             st.subheader("📄 Extracted Data")
+            text = html.escape(st.session_state["pdf_text"])
+            text = text.replace("\n", "<br>")
             st.markdown(f"""
                 <div style="padding: 1rem; background-color: #1c1c1e; border-radius: 10px; color: white; overflow:auto; max-height: 400px;">
-                    {st.session_state['pdf_text'].replace('\n', '<br>')}
+                    {text}
                 </div>
-            """, unsafe_allow_html=True)
+            """
+            ,unsafe_allow_html=True)
 
         with col2:
             st.subheader("📊 Metadata")
@@ -237,12 +241,14 @@ elif page == "PDF Extraction":
             with st.spinner("Generating summary..."):
                 summary = summarize_pdf_text(st.session_state['pdf_text'])
                 st.session_state.pdf_summary = summary
-
+            # print(summary)
         if 'pdf_summary' in st.session_state:
             st.subheader("📚 Summary")
+            pdf_summary = html.escape(st.session_state['pdf_summary'])
+            pdf_summary = pdf_summary.replace("\n", "<br>")
             st.markdown(f"""
                 <div style="padding: 1rem; background-color: #1c1c1e; border-radius: 10px; color: white;">
-                    {st.session_state['pdf_summary'].replace('\n', '<br>')}
+                    {pdf_summary}
                 </div>
             """, unsafe_allow_html=True)
 

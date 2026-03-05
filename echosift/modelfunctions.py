@@ -1,9 +1,17 @@
-import openai 
-API_KEY = "ddc-bUOZrLV5gJb4KLXJwnDmaFaS6pd7NcaewGsaaTLV9NWHC7Srmj"
-BASE_URL = "https://api.sree.shop/v1"
-client = openai.OpenAI(
-    api_key=API_KEY,
-    base_url=BASE_URL
+import os
+from openai import AzureOpenAI
+
+# Trial Func
+endpoint = "https://echosift-resource.cognitiveservices.azure.com/openai/deployments/gpt-4.1-mini/chat/completions?api-version=2025-01-01-preview"
+model_name = "gpt-4.1-mini"
+deployment = "gpt-4.1-mini"
+subscription_key = "6WSCdbLqf8J7fmZSTb3QhhKj4uP1oeTq3WYByzjun8zcE7idccsFJQQJ99CAACHYHv6XJ3w3AAAAACOGixJD"
+api_version = "2025-01-01-preview"
+
+client = AzureOpenAI(
+    api_version = api_version,
+    azure_endpoint = endpoint,
+    api_key = subscription_key
 )
 
 # Summarization function
@@ -14,22 +22,37 @@ def summarize_website_text(text: str) -> str:
             return "No text to summarize."
         
         truncated_text = text[:MAX_TOKENS]  # Limit input size
+        # response = client.chat.completions.create(
+        #     model="Meta-Llama-3.3-70B-Instruct-Turbo",
+        #     messages=[{"role": "user", "content": f"Summarize this: {truncated_text} also provide analysis on extract metadata."}]
+        # )
         response = client.chat.completions.create(
-            model="Meta-Llama-3.3-70B-Instruct-Turbo",
-            messages=[{"role": "user", "content": f"Summarize this: {truncated_text} also provide analysis on extract metadata."}]
+            messages = [
+        {
+            "role" : "system",
+            "content" : "You are a summarization agent which will summarize the provided content with relation to the original and summarized content."
+        },
+        {
+            "role" : "user",
+            "content" : f"Summarize this:{truncated_text} also provide analysis on extracted metadata."
+        }
+    ],
+    max_completion_tokens = 16384,
+    model = deployment,
         )
 
         return response.choices[0].message.content or "Summary could not be generated."
 
     except Exception as e:
         return f"Error summarizing text: {e}"
-    
+
 #  QnA for Data Extracted from Web
 def ask_website_question(text: str, question: str) -> str:
     try:
         truncated_text = text[:4000]  # Safely limit the context
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model= deployment,
+            max_completion_tokens= 16384,
             messages=[
                 {"role": "system", "content": "You are an assistant that answers questions based on scraped website content."},
                 {"role": "user", "content": f"Content:\n{truncated_text}\n\nQuestion: {question}"}
@@ -48,11 +71,19 @@ def summarize_pdf_text(text: str) -> str:
         
         truncated_text = text[:MAX_TOKENS]  # Limit input size
         response = client.chat.completions.create(
-            model="Meta-Llama-3.3-70B-Instruct-Turbo",
-            messages=[{"role": "user", "content": f"Summarize this: {truncated_text}"}]
+            model= deployment,
+            max_completion_tokens= 16384,
+            messages=[
+                {
+                    "role" : "system",
+                    "content" : "You are an assistant who summarizes the content extracted from provided PDFs and also provide analysis based on the metadata ecxtracted from PDFs also provide structured summarized content"
+                },
+                {"role": "user", 
+                    "content": f"Summarize the following content into mid-sized content: {truncated_text}"}]
         )
-
-        return response.choices[0].message.content or "Summary could not be generated."
+        summary = response.choices[0].message.content
+        return summary or "Summary could not be generated."
+        
 
     except Exception as e:
         return f"Error summarizing text: {e}"
@@ -77,7 +108,8 @@ Now answer this question:
 """
 
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model= deployment,
+            max_completion_tokens= 16384,
             messages=[{"role": "user", "content": prompt}]
         )
 
