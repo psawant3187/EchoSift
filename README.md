@@ -6,11 +6,11 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.41.1-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
-[![Azure OpenAI](https://img.shields.io/badge/Azure_OpenAI-GPT--4.1_mini-0078D4?style=for-the-badge&logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com/en-us/products/ai-services/openai-service)
+[![Azure OpenAI](https://img.shields.io/badge/Azure_OpenAI-GPT--4o-0078D4?style=for-the-badge&logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com/en-us/products/ai-services/openai-service)
 [![Selenium](https://img.shields.io/badge/Selenium-4.31-43B02A?style=for-the-badge&logo=selenium&logoColor=white)](https://selenium.dev)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
-**EchoSift** is an intelligent data extraction platform that scrapes websites, Amazon, and Flipkart — then uses Azure OpenAI (GPT-4.1 mini) to summarize content, answer questions, and extract insights from PDFs. All wrapped in a beautiful Streamlit UI with a companion Telegram bot.
+**EchoSift** is an intelligent data extraction platform that scrapes websites, Amazon, and Flipkart — then uses Azure OpenAI (GPT-4o) to summarize content, answer questions, and extract insights from PDFs. All wrapped in a beautiful Streamlit UI with a companion Telegram bot.
 
 [Features](#-features) • [Architecture](#-architecture) • [Installation](#-installation) • [Configuration](#-configuration) • [Usage](#-usage) • [Project Structure](#-project-structure) • [Troubleshooting](#-troubleshooting)
 
@@ -53,7 +53,7 @@ EchoSift/
     │
     └── Model/
         ├── client.py            ← Azure OpenAI client initialisation
-        └── modelfunctions.py    ← GPT-4.1 mini summarization & Q&A functions
+        └── modelfunctions.py    ← GPT-4o summarization & Q&A functions
 ```
 
 ### Data Flow
@@ -64,7 +64,7 @@ User Input (URL / PDF / Search)
         ▼
   ┌─────────────┐    ┌──────────────┐    ┌───────────────┐
   │  Scrapper / │───▶│  Extracted   │───▶│  Azure OpenAI │
-  │  Extractor  │    │  Raw Text    │    │  GPT-4.1 mini │
+  │  Extractor  │    │  Raw Text    │    │  GPT-4o       │
   └─────────────┘    └──────────────┘    └───────────────┘
         │                                        │
         ▼                                        ▼
@@ -263,7 +263,7 @@ $env:AZURE_OPENAI_API_VERSION = "2025-01-01-preview"
 # macOS / Linux
 export AZURE_OPENAI_API_KEY="your-api-key"
 export AZURE_OPENAI_ENDPOINT="https://your-resource.cognitiveservices.azure.com/"
-export AZURE_OPENAI_DEPLOYMENT="gpt-4.1-mini"
+export AZURE_OPENAI_DEPLOYMENT="gpt-4o"
 export AZURE_OPENAI_API_VERSION="2025-01-01-preview"
 ```
 
@@ -282,7 +282,7 @@ $env:TESSERACT_CMD = "C:\custom\path\tesseract.exe"  # Windows
 |---|---|---|
 | `AZURE_OPENAI_API_KEY` | — | **Required.** Your Azure OpenAI API key |
 | `AZURE_OPENAI_ENDPOINT` | — | **Required.** Azure resource endpoint URL |
-| `AZURE_OPENAI_DEPLOYMENT` | `gpt-4.1-mini` | Deployment name |
+| `AZURE_OPENAI_DEPLOYMENT` | `gpt-4o` | Deployment name |
 | `AZURE_OPENAI_API_VERSION` | `2025-01-01-preview` | API version |
 | `SCRAPE_MAX_DEPTH` | `5` | Max recursion depth for web scraping |
 | `SCRAPE_MAX_LINKS_PER_PAGE` | `100` | Max links followed per page |
@@ -316,7 +316,7 @@ The app opens automatically at **http://localhost:8501**
 4. Click **Scrape Website** — content, metadata, and images are extracted
 5. Filter results by page title or keyword
 6. Click **Summarize Scraped Content** to get an AI summary
-7. Use the **Ask Questions** box to query the content with GPT-4.1 mini
+7. Use the **Ask Questions** box to query the content with GPT-4o
 
 > ⚠️ Higher depth values crawl more pages and take longer. Depth 2–3 is recommended for most sites.
 
@@ -394,7 +394,7 @@ EchoSift/
     │
     └── Model/
         ├── client.py             ← AzureOpenAI client singleton
-        └── modelfunctions.py     ← summarize_*(), ask_*() using GPT-4.1 mini
+        └── modelfunctions.py     ← summarize_*(), ask_*() using GPT-4o
 ```
 
 ---
