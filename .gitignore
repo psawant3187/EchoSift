@@ -1,0 +1,4 @@
+es/
+.env
+__pycache__/
+test.py
